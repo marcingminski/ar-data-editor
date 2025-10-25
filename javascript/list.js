@@ -172,7 +172,7 @@ function setList(memoryBankNo){
                 isDuplicate = frequencyCount.get(freq) > 1;
             }
 
-            const row = $('<tr>', {id: `line_${i}`});
+            const row = $('<tr>', {id: `line_${i}`, class: 'channel-row'});
             if (isDuplicate) {
                 row.addClass('duplicate-frequency');
             }
