@@ -238,7 +238,13 @@
               <label for="import-target-bank">Target Bank</label>
               <select name="import-target-bank" id="import-target-bank">
               </select>
-              <label>Select Channels to Import</label>
+              <div style="margin: 10px 0;">
+                <label>
+                  <input type="checkbox" id="import-deduplicate" checked />
+                  Remove duplicate frequencies (keeps first title)
+                </label>
+              </div>
+              <label>Select Channels to Import <span id="import-selected-count" style="font-weight: normal;">(0 selected)</span></label>
               <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
                 <div style="margin-bottom: 10px;">
                   <label>

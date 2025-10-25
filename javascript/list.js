@@ -76,11 +76,20 @@ function setList(memoryBankNo){
                         'class': 'list-no-text'
                     })));
             let frequency = $('<td>', {id: `line_frequency_${i}`});
-            let title = $('<td>', {id: `line_title_${i}`});
+            let title = $('<td>', {id: `line_title_${i}`, class: 'editable-title'});
             let mode = $('<td>', {id: `line_mode_${i}`});
             if ( memoryChannels[i].channelRegistedFlg == '1' ){
                 frequency.append(memoryChannels[i].receiveFrequency);
-                title.append(memoryChannels[i].memoryTag);
+                // Create editable input for title
+                let titleInput = $('<input>', {
+                    type: 'text',
+                    class: 'title-input',
+                    'data-channel': i,
+                    value: memoryChannels[i].memoryTag,
+                    maxlength: 12,
+                    style: 'width: 100%; border: none; background: transparent; font-family: inherit;'
+                });
+                title.append(titleInput);
                 mode.append(memoryChannels[i].modeDescription());
             }
             let edit = $('<td>').append(
@@ -111,10 +120,19 @@ function setList(memoryBankNo){
                     $('<span>', { text: paddingZero(i),
                                   'class': 'list-no-text'
                                 })));
-            let title = $('<td>', {id: `line_title_${i}`});
+            let title = $('<td>', {id: `line_title_${i}`, class: 'editable-title'});
             let mode = $('<td>', {id: `line_mode_${i}`});
             if ( memoryChannels[i].channelRegistedFlg == '1' ){
-                title.append(memoryChannels[i].memoryTag);
+                // Create editable input for title
+                let titleInput = $('<input>', {
+                    type: 'text',
+                    class: 'title-input',
+                    'data-channel': i,
+                    value: memoryChannels[i].memoryTag,
+                    maxlength: 12,
+                    style: 'width: 100%; border: none; background: transparent; font-family: inherit;'
+                });
+                title.append(titleInput);
                 mode.append(memoryChannels[i].modeDescription());
             }
             let edit = $('<td>').append(
@@ -136,20 +154,38 @@ function updateLine(memoryChannelNo){
         let memoryBankNo = $('#select-bank').val();
         let channel = currentMemoryData.getChannel(memoryBankNo, memoryChannelNo);
         $(`#line_frequency_${memoryChannelNo}`).text('');
-        $(`#line_title_${memoryChannelNo}`).text('');
+        $(`#line_title_${memoryChannelNo}`).empty();
         $(`#line_mode_${memoryChannelNo}`).text('');
         if ( channel.channelRegistedFlg == '1' ){
             $(`#line_frequency_${memoryChannelNo}`).text(channel.receiveFrequency);
-            $(`#line_title_${memoryChannelNo}`).text(channel.memoryTag);
+            // Recreate editable input for title
+            let titleInput = $('<input>', {
+                type: 'text',
+                class: 'title-input',
+                'data-channel': memoryChannelNo,
+                value: channel.memoryTag,
+                maxlength: 12,
+                style: 'width: 100%; border: none; background: transparent; font-family: inherit;'
+            });
+            $(`#line_title_${memoryChannelNo}`).append(titleInput);
             $(`#line_mode_${memoryChannelNo}`).text(channel.modeDescription());
         }
     }else{
         let memoryBankNo = $('#select-bank').val();
         let channel = currentMemoryData.getChannel(memoryBankNo, memoryChannelNo);
-        $(`#line_title_${memoryChannelNo}`).text('');
+        $(`#line_title_${memoryChannelNo}`).empty();
         $(`#line_mode_${memoryChannelNo}`).text('');
         if ( channel.channelRegistedFlg == '1' ){
-            $(`#line_title_${memoryChannelNo}`).text(channel.memoryTag);
+            // Recreate editable input for title
+            let titleInput = $('<input>', {
+                type: 'text',
+                class: 'title-input',
+                'data-channel': memoryChannelNo,
+                value: channel.memoryTag,
+                maxlength: 12,
+                style: 'width: 100%; border: none; background: transparent; font-family: inherit;'
+            });
+            $(`#line_title_${memoryChannelNo}`).append(titleInput);
             $(`#line_mode_${memoryChannelNo}`).text(channel.modeDescription());
         }
     }
@@ -578,6 +614,18 @@ $(document).on('change', '#membk-file-select',
 
                    // Reset file input so the same file can be selected again
                    $(this).val('');
+               });
+/** Inline title editing **/
+$(document).on('input', '.title-input',
+               function(){
+                   // Save title as user types
+                   let channelNo = parseInt($(this).data('channel'));
+                   let bankNo = $('#select-bank').val();
+                   let newTitle = $(this).val();
+                   let channel = currentMemoryData.getChannel(bankNo, channelNo);
+                   if (channel) {
+                       channel.memoryTag = newTitle;
+                   }
                });
 $(document).on('click', '#open-file-btn',
                function(){
@@ -1075,6 +1123,9 @@ function displayImportChannels() {
 
     if (!importSourceData) return;
 
+    const deduplicate = $('#import-deduplicate').prop('checked');
+    const seenFrequencies = new Set();
+
     // Iterate through all banks and channels
     for (let bankNo = 0; bankNo < MEMORY_BANK_NUM; bankNo++) {
         const channels = importSourceData.getBankChannels(bankNo);
@@ -1083,6 +1134,18 @@ function displayImportChannels() {
 
             // Only show registered channels (skip empty ones)
             if (channel.channelRegistedFlg == '1') {
+                const frequency = channel.receiveFrequency;
+
+                // Skip if deduplicating and we've already seen this frequency
+                if (deduplicate && seenFrequencies.has(frequency)) {
+                    continue;
+                }
+
+                // Mark this frequency as seen
+                if (deduplicate) {
+                    seenFrequencies.add(frequency);
+                }
+
                 const row = $('<tr>');
 
                 const checkbox = $('<input>', {
@@ -1095,7 +1158,7 @@ function displayImportChannels() {
                 row.append($('<td>').append(checkbox));
                 row.append($('<td>', { text: paddingZero(bankNo) }));
                 row.append($('<td>', { text: paddingZero(chNo) }));
-                row.append($('<td>', { text: channel.receiveFrequency }));
+                row.append($('<td>', { text: frequency }));
                 row.append($('<td>', { text: channel.memoryTag }));
                 row.append($('<td>', { text: channel.modeDescription() }));
 
@@ -1103,12 +1166,32 @@ function displayImportChannels() {
             }
         }
     }
+
+    // Update counter after displaying channels
+    updateImportSelectedCount();
+}
+
+$(document).on('change', '#import-deduplicate',
+               function(){
+                   // Refresh the channel list when deduplicate setting changes
+                   displayImportChannels();
+               });
+
+function updateImportSelectedCount() {
+    const count = $('.import-channel-checkbox:checked').length;
+    $('#import-selected-count').text(`(${count} selected)`);
 }
 
 $(document).on('change', '#import-select-all',
                function(){
                    const checked = $(this).prop('checked');
                    $('.import-channel-checkbox').prop('checked', checked);
+                   updateImportSelectedCount();
+               });
+
+$(document).on('change', '.import-channel-checkbox',
+               function(){
+                   updateImportSelectedCount();
                });
 
 $(document).on('click', '#import-execute-btn',
@@ -1175,6 +1258,7 @@ $(document).on('click', '#import-execute-btn',
                    $('#import-channel-selection').hide();
                    $('#import-execute-btn').hide();
                    $('#import-source-file-error').text('');
+                   $('#import-selected-count').text('(0 selected)');
                    importSourceData = null;
 
                    // Show success message
@@ -1189,5 +1273,6 @@ $(document).on('click', '#import-cancel-btn',
                    $('#import-channel-selection').hide();
                    $('#import-execute-btn').hide();
                    $('#import-source-file-error').text('');
+                   $('#import-selected-count').text('(0 selected)');
                    importSourceData = null;
                });

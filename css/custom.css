@@ -159,3 +159,18 @@ p.version{
     margin: 0;
     cursor: pointer;
 }
+
+/* Inline title editing */
+.title-input {
+    padding: 2px 4px;
+    font-size: inherit;
+}
+.title-input:hover {
+    background: #f0f0f0 !important;
+    cursor: text;
+}
+.title-input:focus {
+    background: #fff !important;
+    border: 1px solid #4a90e2 !important;
+    outline: none;
+}
