@@ -160,8 +160,15 @@ function setEditMode(fileType){
     setList(0);
     if( fileType == SD_BACKUP ){
         $('#fn-multiple-data-create-btn').show();
+        // Initialize bank name field
+        if (currentMemoryData) {
+            let bankName = currentMemoryData.getBankName(0);
+            $('#bank-name-input').val(bankName);
+            $('#f-bank-name').show();
+        }
     }else{
         $('#fn-multiple-data-create-btn').hide();
+        $('#f-bank-name').hide();
     }
 }
 function readDataToObject( dataArray ){
@@ -232,6 +239,23 @@ function readDataToObject( dataArray ){
 
     return new MemoryData(fileType, model, blockType, version, registeredAt, selectedMemoryBankNo, selectedMemoryChannelNo, banks);
 }
+function parseBankNamesFromData( dataArray ){
+    // Parse membk.csv format to extract bank names
+    let bankNames = new Array(MEMORY_BANK_NUM);
+    // Initialize with empty names
+    for (let i = 0; i < MEMORY_BANK_NUM; i++) {
+        bankNames[i] = '            '; // 12 spaces
+    }
+
+    for (let i = 0; i < dataArray.length; i++) {
+        if (dataArray[i][0] === 'MB1') {
+            let bankNo = Number(dataArray[i][1]);
+            let bankName = dataArray[i][6] || '            ';
+            bankNames[bankNo] = bankName;
+        }
+    }
+    return bankNames;
+}
 function showErrorPopup(message){
     $('#fn-error-message').text(message);
     $('#fn-error').popup('open');
@@ -282,6 +306,7 @@ function readFile(fileElement){
 };
 
 function jsonToCsv(model, filename){
+    // Save memory channel file
     let csv = Papa.unparse( currentMemoryData.toCSVData(model));
     let javascriptCharCodeArray = csv.split('').map(
         function(value, index, array){
@@ -297,6 +322,25 @@ function jsonToCsv(model, filename){
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+
+    // Also save membk.csv file if this is an SD-BACKUP file
+    if (currentMemoryData.fileType === SD_BACKUP) {
+        let membkCsv = Papa.unparse( currentMemoryData.toMemBankCSVData(model));
+        let membkCharCodeArray = membkCsv.split('').map(
+            function(value, index, array){
+                return value.charCodeAt(0);
+            });
+        let membkSJISCodeArray = Encoding.convert(membkCharCodeArray, 'SIJIS', 'UNICODE');
+        let membkBlob = new Blob([new Uint8Array(membkSJISCodeArray)], {'type': 'text/csv'});
+        let membkBlobURL = window.URL.createObjectURL(membkBlob);
+        let membkLink = document.createElement('a');
+        membkLink.download = 'membk.csv';
+        membkLink.href = membkBlobURL;
+        membkLink.dataset.downloadurl = ['text/csv', membkLink.download, membkLink.href].join(':');
+        document.body.appendChild(membkLink);
+        membkLink.click();
+        document.body.removeChild(membkLink);
+    }
 }
 function newMemoryData(model, fileType){
     let registeredDate = new Date;
@@ -464,7 +508,77 @@ $(document).on('pagecreate',
 $(document).on('change', 'select#select-bank',
                function(){
                    setList($(this).val());
+                   // Update bank name input field
+                   if (currentMemoryData && currentMemoryData.fileType == SD_BACKUP) {
+                       let bankNo = $(this).val();
+                       let bankName = currentMemoryData.getBankName(bankNo);
+                       $('#bank-name-input').val(bankName);
+                   }
 });
+$(document).on('input', '#bank-name-input',
+               function(){
+                   // Save bank name as user types
+                   if (currentMemoryData && currentMemoryData.fileType == SD_BACKUP) {
+                       let bankNo = $('#select-bank').val();
+                       let bankName = $(this).val();
+                       currentMemoryData.setBankName(bankNo, bankName);
+                   }
+});
+$(document).on('click', '#import-bank-names-btn',
+               function(){
+                   $('#membk-file-select').click();
+               });
+$(document).on('change', '#membk-file-select',
+               function(event){
+                   const file = event.target.files[0];
+                   if (!file) return;
+
+                   const reader = new FileReader();
+                   reader.onload = function(e) {
+                       const csvData = e.target.result;
+
+                       // Parse CSV using PapaParse with Shift-JIS encoding
+                       const codes = new Uint8Array(csvData);
+                       const encoding_data = Encoding.convert(codes, {
+                           to: 'UNICODE',
+                           from: 'SJIS',
+                           type: 'string'
+                       });
+
+                       Papa.parse(encoding_data, {
+                           complete: function(results) {
+                               try {
+                                   // Parse bank names from membk.csv
+                                   const bankNames = parseBankNamesFromData(results.data);
+
+                                   // Apply bank names to current memory data
+                                   if (currentMemoryData && currentMemoryData.fileType == SD_BACKUP) {
+                                       currentMemoryData._bankNames = bankNames;
+
+                                       // Update current bank name display
+                                       let currentBankNo = $('#select-bank').val();
+                                       let bankName = currentMemoryData.getBankName(currentBankNo);
+                                       $('#bank-name-input').val(bankName);
+
+                                       // Show success message
+                                       $('#fn-info-message').text('Bank names imported successfully from membk.csv');
+                                       $('#fn-info').popup('open');
+                                   }
+                               } catch (error) {
+                                   showErrorPopup('Error reading membk.csv: ' + error.message);
+                                   console.error('membk.csv read error:', error);
+                               }
+                           },
+                           error: function(error) {
+                               showErrorPopup('Error parsing membk.csv: ' + error.message);
+                           }
+                       });
+                   };
+                   reader.readAsArrayBuffer(file);
+
+                   // Reset file input so the same file can be selected again
+                   $(this).val('');
+               });
 $(document).on('click', '#open-file-btn',
                function(){
                    $('#file-select').click();

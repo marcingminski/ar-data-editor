@@ -1,6 +1,6 @@
 /*! memory_data.js | v1.1.6 2019/10 AOR, LTD. | https://github.com/aor-app/ar-data-editor */
 class MemoryData {
-    constructor(fileType, model, blockType, version, registeredAt = new Date, selectedMemoryBankNo, selectedMemoryChannelNo, banks){
+    constructor(fileType, model, blockType, version, registeredAt = new Date, selectedMemoryBankNo, selectedMemoryChannelNo, banks, bankNames = null){
         this.model = model;
         this.blockType = blockType;
         this._modelVersion = version;
@@ -9,6 +9,15 @@ class MemoryData {
         this.selectedMemoryChannelNo = selectedMemoryChannelNo;
         this._banks = banks;
         this.fileType = fileType;
+        // Initialize bank names array (40 banks with 12-char names)
+        if (bankNames) {
+            this._bankNames = bankNames;
+        } else {
+            this._bankNames = new Array(MEMORY_BANK_NUM);
+            for (let i = 0; i < MEMORY_BANK_NUM; i++) {
+                this._bankNames[i] = '            '; // 12 spaces default
+            }
+        }
     }
     get modelVersion(){ return this._modelVersion ? this._modelVersion : '( none )';}
     getModelMode(){
@@ -36,6 +45,13 @@ class MemoryData {
     }
     getBanks(){
         return this._banks.length;
+    }
+    getBankName( memoryBankNo ){
+        return this._bankNames[memoryBankNo] ? this._bankNames[memoryBankNo].trimEnd() : '';
+    }
+    setBankName( memoryBankNo, name ){
+        // Pad or truncate to exactly 12 characters
+        this._bankNames[memoryBankNo] = (name + '            ').slice(0, 12);
     }
     getChannel( memoryBankNo, memoryChannelNo ){
         return this._banks[memoryBankNo][memoryChannelNo];
@@ -228,6 +244,31 @@ class MemoryData {
         }
         // data
         csvArray.push(this.createMC9Array());
+        return csvArray;
+    }
+    toMemBankCSVData(model){
+        if ( model == this.model){
+            model = null;
+        }
+        let exportModel = '';
+        if (!model){
+            exportModel = this.model;
+        }else{
+            exportModel = model;
+        }
+
+        let csvArray = new Array;
+        // Header row
+        csvArray.push(['SD-BACKUP', 'MEM BANK', exportModel, this._modelVersion, this.registeredAt]);
+        // MB0 row - current bank selection
+        csvArray.push(['MB0', ('00' + this.selectedMemoryBankNo).slice(-2)]);
+        // MB1 rows - one per bank with name
+        for (let i = 0; i < MEMORY_BANK_NUM; i++) {
+            let bankName = this._bankNames[i] || '            ';
+            csvArray.push(['MB1', ('00' + i).slice(-2), '50', '1', '0', '00', bankName]);
+        }
+        // MB9 end marker
+        csvArray.push(['MB9']);
         return csvArray;
     }
 }

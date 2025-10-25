@@ -59,6 +59,13 @@
           <select name="select-bank" id="select-bank" data-inline="true">
           </select>
         </div>
+        <div class="ui-field-contain" id="f-bank-name">
+          <label for="bank-name-input">Bank Name</label>
+          <input type="text" id="bank-name-input" maxlength="12" placeholder="Enter bank name (max 12 chars)" />
+          <a href="#" class="ui-btn ui-btn-inline" id="import-bank-names-btn" style="margin-top: 0.5em;">Import Bank Names from membk.csv</a>
+          <input type="file" style="display:none;" id="membk-file-select" accept=".csv" />
+          <p style="font-size: small; margin: 0.3em 0;">Bank names are saved in membk.csv</p>
+        </div>
         <div data-role="controlgroup" data-type="horizontal">
           <a href="#" class="ui-btn" id="fn-select-all-btn">Select All</a>
           <a href="#" class="ui-btn" id="fn-deselect-all-btn">Deselect All</a>
