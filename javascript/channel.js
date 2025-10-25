@@ -295,4 +295,9 @@ class Channel {
         return array;
     }
 
+    copyFrom(sourceChannel){
+        // Copy all data from source channel
+        this.data = sourceChannel.data.slice(0); // Make a copy of the array
+    }
+
 }

@@ -214,6 +214,22 @@ function readDataToObject( dataArray ){
             }
         }
     }
+
+    // Ensure all banks have exactly 50 channels (fill with empty channels if needed)
+    if (fileType === SD_BACKUP) {
+        for (let bankNo = 0; bankNo < MEMORY_BANK_NUM; bankNo++) {
+            if (!banks[bankNo]) {
+                banks[bankNo] = new Array(MEMORY_CHANNEL_NUM);
+            }
+            // Fill any missing channels with empty Channel objects
+            for (let chNo = 0; chNo < MEMORY_CHANNEL_NUM; chNo++) {
+                if (!banks[bankNo][chNo]) {
+                    banks[bankNo][chNo] = new Channel();
+                }
+            }
+        }
+    }
+
     return new MemoryData(fileType, model, blockType, version, registeredAt, selectedMemoryBankNo, selectedMemoryChannelNo, banks);
 }
 function showErrorPopup(message){
@@ -489,6 +505,21 @@ $(document).on('pagebeforeshow', '#page-detail',
                    }else{
                        $.mobile.changePage('#page-list');
                    }
+               });
+$(document).on('click', '#fn-select-all-btn',
+               function(){
+                   // Only select registered (non-empty) channels
+                   let bankNo = $('#select-bank').val();
+                   let memoryChannels = currentMemoryData.getBankChannels(bankNo);
+                   for (let i = 0; i < memoryChannels.length; i++) {
+                       if (memoryChannels[i].channelRegistedFlg == '1') {
+                           $(`#line_selected_${i}`).prop('checked', true);
+                       }
+                   }
+               });
+$(document).on('click', '#fn-deselect-all-btn',
+               function(){
+                   $('input[name="line_selected"]').prop('checked', false);
                });
 $(document).on('click', '#fn-clear-btn',
                function(){
@@ -859,4 +890,190 @@ $(document).on('click', '#fn-error-close',
 $(document).on('click', '#fn-info-close',
                function(){
                    $('#fn-info').popup('close');
+               });
+
+/** Import channels from Radio Reference UK export **/
+let importSourceData = null;
+
+$(document).on('change', '#import-source-file',
+               function(event){
+                   const file = event.target.files[0];
+                   if (!file) return;
+
+                   $('#import-source-file-error').text('');
+
+                   // Read the import source file
+                   const reader = new FileReader();
+                   reader.onload = function(e) {
+                       const csvData = e.target.result;
+
+                       // Parse CSV using PapaParse with Shift-JIS encoding
+                       const codes = new Uint8Array(csvData);
+                       const encoding_data = Encoding.convert(codes, {
+                           to: 'UNICODE',
+                           from: 'SJIS',
+                           type: 'string'
+                       });
+
+                       Papa.parse(encoding_data, {
+                           complete: function(results) {
+                               try {
+                                   importSourceData = readDataToObject(results.data);
+
+                                   if (!importSourceData || importSourceData.fileType !== SD_BACKUP) {
+                                       $('#import-source-file-error').text('Invalid file format. Please select an SD-BACKUP file.');
+                                       return;
+                                   }
+
+                                   // Populate target bank dropdown
+                                   $('#import-target-bank').empty();
+                                   for (let i = 0; i < MEMORY_BANK_NUM; i++) {
+                                       $('#import-target-bank').append(
+                                           $('<option>', { value: i, text: 'Bank ' + paddingZero(i) })
+                                       );
+                                   }
+
+                                   // Set current bank as default
+                                   const currentBank = parseInt($('#select-bank').val() || 0);
+                                   $('#import-target-bank').val(currentBank);
+
+                                   // Display all channels from import file
+                                   displayImportChannels();
+
+                                   $('#import-channel-selection').show();
+                                   $('#import-execute-btn').show();
+                               } catch (error) {
+                                   $('#import-source-file-error').text('Error reading file: ' + error.message);
+                                   console.error('Import file read error:', error);
+                               }
+                           },
+                           error: function(error) {
+                               $('#import-source-file-error').text('Error parsing CSV: ' + error.message);
+                           }
+                       });
+                   };
+                   reader.readAsArrayBuffer(file);
+               });
+
+function displayImportChannels() {
+    const tbody = $('#import-channels-tbody');
+    tbody.empty();
+
+    if (!importSourceData) return;
+
+    // Iterate through all banks and channels
+    for (let bankNo = 0; bankNo < MEMORY_BANK_NUM; bankNo++) {
+        const channels = importSourceData.getBankChannels(bankNo);
+        for (let chNo = 0; chNo < channels.length; chNo++) {
+            const channel = channels[chNo];
+
+            // Only show registered channels (skip empty ones)
+            if (channel.channelRegistedFlg == '1') {
+                const row = $('<tr>');
+
+                const checkbox = $('<input>', {
+                    type: 'checkbox',
+                    class: 'import-channel-checkbox',
+                    'data-bank': bankNo,
+                    'data-channel': chNo
+                });
+
+                row.append($('<td>').append(checkbox));
+                row.append($('<td>', { text: paddingZero(bankNo) }));
+                row.append($('<td>', { text: paddingZero(chNo) }));
+                row.append($('<td>', { text: channel.receiveFrequency }));
+                row.append($('<td>', { text: channel.memoryTag }));
+                row.append($('<td>', { text: channel.modeDescription() }));
+
+                tbody.append(row);
+            }
+        }
+    }
+}
+
+$(document).on('change', '#import-select-all',
+               function(){
+                   const checked = $(this).prop('checked');
+                   $('.import-channel-checkbox').prop('checked', checked);
+               });
+
+$(document).on('click', '#import-execute-btn',
+               function(){
+                   const targetBank = parseInt($('#import-target-bank').val());
+                   const selectedChannels = [];
+
+                   // Collect selected channels
+                   $('.import-channel-checkbox:checked').each(function() {
+                       const bankNo = parseInt($(this).data('bank'));
+                       const chNo = parseInt($(this).data('channel'));
+                       const channel = importSourceData.getBankChannels(bankNo)[chNo];
+                       selectedChannels.push(channel);
+                   });
+
+                   if (selectedChannels.length === 0) {
+                       $('#import-source-file-error').text('Please select at least one channel to import.');
+                       return;
+                   }
+
+                   // Find the first available position in target bank
+                   const targetBankChannels = currentMemoryData.getBankChannels(targetBank);
+                   let insertPosition = 0;
+
+                   // Find first empty slot
+                   for (let i = 0; i < targetBankChannels.length; i++) {
+                       if (targetBankChannels[i].channelRegistedFlg != '1') {
+                           insertPosition = i;
+                           break;
+                       }
+                       insertPosition = i + 1;
+                   }
+
+                   // Check if there's enough space
+                   if (insertPosition + selectedChannels.length > MEMORY_CHANNEL_NUM) {
+                       const available = MEMORY_CHANNEL_NUM - insertPosition;
+                       $('#import-source-file-error').text(
+                           `Not enough space in target bank. Available slots: ${available}, Selected channels: ${selectedChannels.length}`
+                       );
+                       return;
+                   }
+
+                   // Import channels
+                   for (let i = 0; i < selectedChannels.length; i++) {
+                       const sourceChannel = selectedChannels[i];
+                       const targetChannel = targetBankChannels[insertPosition + i];
+
+                       // Copy all channel properties
+                       targetChannel.copyFrom(sourceChannel);
+                       // Update bank and channel numbers in the data array
+                       targetChannel.data[MC.MEMORY_BANK] = paddingZero(targetBank);
+                       targetChannel.data[MC.MEMORY_CHANNEL] = paddingZero(insertPosition + i);
+                   }
+
+                   // Refresh the display
+                   setList(targetBank);
+                   $('#select-bank').val(targetBank).selectmenu('refresh');
+
+                   // Close the popup
+                   $('#import_channels').popup('close');
+
+                   // Reset the form
+                   $('#import-source-file').val('');
+                   $('#import-channel-selection').hide();
+                   $('#import-execute-btn').hide();
+                   $('#import-source-file-error').text('');
+                   importSourceData = null;
+
+                   // Show success message
+                   $('#fn-info-message').text(`Successfully imported ${selectedChannels.length} channel(s) to Bank ${paddingZero(targetBank)}`);
+                   $('#fn-info').popup('open');
+               });
+
+$(document).on('click', '#import-cancel-btn',
+               function(){
+                   $('#import_channels').popup('close');
+                   $('#import-source-file').val('');
+                   $('#import-channel-selection').hide();
+                   $('#import-execute-btn').hide();
+                   $('#import-source-file-error').text('');
+                   importSourceData = null;
                });

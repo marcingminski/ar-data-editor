@@ -34,6 +34,7 @@
           <a href="#new_file" data-rel="popup" class="ui-btn" id="new_file_btn" data-transition="pop">New</a>
           <a href="#" class="ui-btn" id="open-file-btn">Open</a>
           <a href="#" class="ui-btn" id="save-file-btn">Save</a>
+          <a href="#import_channels" data-rel="popup" class="ui-btn" id="import-channels-btn" data-transition="pop">Import</a>
           <a href="help.html" target="_blank" class="ui-btn">Help</a>
         </div>
         <input type="file" style="display:none; border:none" id="file-select"></input>
@@ -59,6 +60,8 @@
           </select>
         </div>
         <div data-role="controlgroup" data-type="horizontal">
+          <a href="#" class="ui-btn" id="fn-select-all-btn">Select All</a>
+          <a href="#" class="ui-btn" id="fn-deselect-all-btn">Deselect All</a>
           <a href="#" class="ui-btn" id="fn-cut-btn">Cut</a>
           <a href="#" class="ui-btn" id="fn-copy-btn">Copy</a>
           <a href="#" class="ui-btn" id="fn-insert-btn">Insert</a>
@@ -213,6 +216,50 @@
         <div role="main" class="ui-content">
           <p id="fn-info-message"></p>
           <a href="#" class="ui-btn" id="fn-info-close">Close</a>
+        </div>
+      </div>
+      <div data-role="popup" id="import_channels" data-overlay-theme="b" data-dismissible="false" data-position-to="window" style="min-width:500px; max-width:800px;">
+        <div data-role="header">
+          <h1>Import Channels</h1>
+        </div>
+        <div role="main" class="ui-content">
+          <form>
+            <label for="import-source-file">Source File (Radio Reference UK export)</label>
+            <input type="file" name="import-source-file" id="import-source-file" accept=".csv" />
+            <p id="import-source-file-error" class="error"></p>
+            <div id="import-channel-selection" style="display:none;">
+              <label for="import-target-bank">Target Bank</label>
+              <select name="import-target-bank" id="import-target-bank">
+              </select>
+              <label>Select Channels to Import</label>
+              <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;">
+                <div style="margin-bottom: 10px;">
+                  <label>
+                    <input type="checkbox" id="import-select-all" />
+                    Select All / Deselect All
+                  </label>
+                </div>
+                <table id="import-channel-list" style="width:100%;">
+                  <thead>
+                    <tr>
+                      <th>Select</th>
+                      <th>Bank</th>
+                      <th>Ch</th>
+                      <th>Frequency</th>
+                      <th>Title</th>
+                      <th>Mode</th>
+                    </tr>
+                  </thead>
+                  <tbody id="import-channels-tbody">
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div style="margin-top: 13px;">
+              <a href="#" class="ui-btn" id="import-execute-btn" style="display:none;">Import Selected</a>
+              <a href="#" class="ui-btn" id="import-cancel-btn">Cancel</a>
+            </div>
+          </form>
         </div>
       </div>
     </div>

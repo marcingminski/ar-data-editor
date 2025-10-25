@@ -14,9 +14,10 @@ This is a convenient browser-based memory data editor for the AR-DV1 and AR-DV10
 ## What does AR DATA EDITOR allow me to do?
 ----------
 
-- Load, edit and save your receiver’s memory channel data.  
-- Create new frequency databases  
-- File format conversion between AR-DV1 and AR-DV10. In other words, a frequency database of one receiver can be opened and saved into a format the other receiver can understand.  
+- Load, edit and save your receiver's memory channel data.
+- Create new frequency databases
+- File format conversion between AR-DV1 and AR-DV10. In other words, a frequency database of one receiver can be opened and saved into a format the other receiver can understand.
+- **Import channels from Radio Reference UK exports** - Select specific channels from a complete memory export (e.g., from https://radioreferenceuk.co.uk/) and import them into a specific bank in your current file.  
   
 #### For more information, please refer to *help.html* .  
 
