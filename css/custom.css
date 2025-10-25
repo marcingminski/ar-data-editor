@@ -282,5 +282,6 @@ p.version{
 }
 .memorychannel-list td:nth-child(2) {
     font-family: monospace;
-    font-size: 1.2em;
+    font-size: 1.5em;
+    font-weight: 900;
 }
