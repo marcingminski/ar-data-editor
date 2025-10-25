@@ -65,7 +65,9 @@ function setList(memoryBankNo){
             $('<th>', {'data-priority': 2 , text: 'Frequency' }),
             $('<th>', {'data-priority': 3 , text: 'Title' }),
             $('<th>', {'data-priority': 4 , text: 'Mode' }),
-            $('<th>', {'data-priority': 5 , text: 'Edit' })
+            $('<th>', {'data-priority': 5 , text: 'Pass' }),
+            $('<th>', {'data-priority': 6 , text: 'Protect' }),
+            $('<th>', {'data-priority': 7 , text: 'Edit' })
         ));
         let memoryChannels = currentMemoryData.getBankChannels(memoryBankNo);
 
@@ -93,6 +95,8 @@ function setList(memoryBankNo){
             let frequency = $('<td>', {id: `line_frequency_${i}`});
             let title = $('<td>', {id: `line_title_${i}`, class: 'editable-title'});
             let mode = $('<td>', {id: `line_mode_${i}`});
+            let pass = $('<td>', {id: `line_pass_${i}`});
+            let protect = $('<td>', {id: `line_protect_${i}`});
             if ( memoryChannels[i].channelRegistedFlg == '1' ){
                 frequency.append($('<span>').text(memoryChannels[i].receiveFrequency)).append(' MHz');
                 // Create editable input for title
@@ -106,6 +110,8 @@ function setList(memoryBankNo){
                 });
                 title.append(titleInput);
                 mode.append(memoryChannels[i].modeDescription());
+                pass.append(memoryChannels[i].passChannel == '1' ? 'ON' : 'OFF');
+                protect.append(memoryChannels[i].writeProtectChannel == '1' ? 'ON' : 'OFF');
             }
             let edit = $('<td>').append(
                 $('<a>',
@@ -125,7 +131,7 @@ function setList(memoryBankNo){
             if (isDuplicate) {
                 row.addClass('duplicate-frequency');
             }
-            row.append(no, frequency, title, mode, edit);
+            row.append(no, frequency, title, mode, pass, protect, edit);
             tbody.append(row);
         }
         table.addClass('memorychannel-list');
@@ -184,6 +190,8 @@ function updateLine(memoryChannelNo){
         $(`#line_frequency_${memoryChannelNo}`).text('');
         $(`#line_title_${memoryChannelNo}`).empty();
         $(`#line_mode_${memoryChannelNo}`).text('');
+        $(`#line_pass_${memoryChannelNo}`).text('');
+        $(`#line_protect_${memoryChannelNo}`).text('');
         if ( channel.channelRegistedFlg == '1' ){
             $(`#line_frequency_${memoryChannelNo}`).empty().append($('<span>').text(channel.receiveFrequency)).append(' MHz');
             // Recreate editable input for title
@@ -193,10 +201,12 @@ function updateLine(memoryChannelNo){
                 'data-channel': memoryChannelNo,
                 value: channel.memoryTag,
                 maxlength: 12,
-                style: 'width: 100%; border: none; background: transparent; font-family: inherit;'
+                style: 'border: none; background: transparent;'
             });
             $(`#line_title_${memoryChannelNo}`).append(titleInput);
             $(`#line_mode_${memoryChannelNo}`).text(channel.modeDescription());
+            $(`#line_pass_${memoryChannelNo}`).text(channel.passChannel == '1' ? 'ON' : 'OFF');
+            $(`#line_protect_${memoryChannelNo}`).text(channel.writeProtectChannel == '1' ? 'ON' : 'OFF');
         }
     }else{
         let memoryBankNo = $('#select-bank').val();

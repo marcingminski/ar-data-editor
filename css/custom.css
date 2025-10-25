@@ -204,6 +204,31 @@ p.version{
     padding: 2px !important;
 }
 
+/* Add spacing for Mode column */
+.memorychannel-list th:nth-child(4),
+.memorychannel-list td:nth-child(4) {
+    padding-left: 20px !important;
+    width: 200px;
+    min-width: 200px;
+    max-width: 200px;
+}
+
+/* Set width for Pass column */
+.memorychannel-list th:nth-child(5),
+.memorychannel-list td:nth-child(5) {
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
+}
+
+/* Set width for Protect column */
+.memorychannel-list th:nth-child(6),
+.memorychannel-list td:nth-child(6) {
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
+}
+
 /* Main list duplicate frequency highlighting */
 .memorychannel-list tbody tr.duplicate-frequency td {
     background-color: #fff3cd;
