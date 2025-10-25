@@ -219,6 +219,7 @@ p.version{
     width: 150px;
     min-width: 150px;
     max-width: 150px;
+    text-align: center;
 }
 
 /* Set width for Protect column */
@@ -227,6 +228,20 @@ p.version{
     width: 150px;
     min-width: 150px;
     max-width: 150px;
+    text-align: center;
+}
+
+/* Toggle switch styling */
+.memorychannel-list .ui-flipswitch {
+    margin: 0 auto;
+}
+/* Change ON background from blue to green */
+.memorychannel-list .ui-flipswitch.ui-flipswitch-active {
+    background-color: #5cb85c !important;
+}
+.memorychannel-list .ui-flipswitch.ui-flipswitch-active .ui-flipswitch-on {
+    color: white !important;
+    text-shadow: none !important;
 }
 
 /* Main list duplicate frequency highlighting */

@@ -110,8 +110,30 @@ function setList(memoryBankNo){
                 });
                 title.append(titleInput);
                 mode.append(memoryChannels[i].modeDescription());
-                pass.append(memoryChannels[i].passChannel == '1' ? 'ON' : 'OFF');
-                protect.append(memoryChannels[i].writeProtectChannel == '1' ? 'ON' : 'OFF');
+
+                // Create Pass toggle switch
+                let passSelect = $('<select>', {
+                    class: 'pass-toggle',
+                    'data-channel': i,
+                    'data-role': 'flipswitch',
+                    'data-mini': 'true'
+                });
+                passSelect.append($('<option>', {value: '0', text: 'OFF'}));
+                passSelect.append($('<option>', {value: '1', text: 'ON'}));
+                passSelect.val(memoryChannels[i].passChannel);
+                pass.append(passSelect);
+
+                // Create Protect toggle switch
+                let protectSelect = $('<select>', {
+                    class: 'protect-toggle',
+                    'data-channel': i,
+                    'data-role': 'flipswitch',
+                    'data-mini': 'true'
+                });
+                protectSelect.append($('<option>', {value: '0', text: 'OFF'}));
+                protectSelect.append($('<option>', {value: '1', text: 'ON'}));
+                protectSelect.val(memoryChannels[i].writeProtect);
+                protect.append(protectSelect);
             }
             let edit = $('<td>').append(
                 $('<a>',
@@ -205,8 +227,30 @@ function updateLine(memoryChannelNo){
             });
             $(`#line_title_${memoryChannelNo}`).append(titleInput);
             $(`#line_mode_${memoryChannelNo}`).text(channel.modeDescription());
-            $(`#line_pass_${memoryChannelNo}`).text(channel.passChannel == '1' ? 'ON' : 'OFF');
-            $(`#line_protect_${memoryChannelNo}`).text(channel.writeProtectChannel == '1' ? 'ON' : 'OFF');
+
+            // Recreate Pass toggle switch
+            let passSelect = $('<select>', {
+                class: 'pass-toggle',
+                'data-channel': memoryChannelNo,
+                'data-role': 'flipswitch',
+                'data-mini': 'true'
+            });
+            passSelect.append($('<option>', {value: '0', text: 'OFF'}));
+            passSelect.append($('<option>', {value: '1', text: 'ON'}));
+            passSelect.val(channel.passChannel);
+            $(`#line_pass_${memoryChannelNo}`).empty().append(passSelect);
+
+            // Recreate Protect toggle switch
+            let protectSelect = $('<select>', {
+                class: 'protect-toggle',
+                'data-channel': memoryChannelNo,
+                'data-role': 'flipswitch',
+                'data-mini': 'true'
+            });
+            protectSelect.append($('<option>', {value: '0', text: 'OFF'}));
+            protectSelect.append($('<option>', {value: '1', text: 'ON'}));
+            protectSelect.val(channel.writeProtect);
+            $(`#line_protect_${memoryChannelNo}`).empty().append(protectSelect);
         }
     }else{
         let memoryBankNo = $('#select-bank').val();
@@ -682,6 +726,28 @@ $(document).on('input', '.title-input',
                    let channel = currentMemoryData.getChannel(bankNo, channelNo);
                    if (channel) {
                        channel.memoryTag = newTitle;
+                   }
+               });
+$(document).on('change', '.pass-toggle',
+               function(){
+                   // Update pass channel setting
+                   let channelNo = parseInt($(this).data('channel'));
+                   let bankNo = $('#select-bank').val();
+                   let newValue = $(this).val();
+                   let channel = currentMemoryData.getChannel(bankNo, channelNo);
+                   if (channel) {
+                       channel.passChannel = newValue;
+                   }
+               });
+$(document).on('change', '.protect-toggle',
+               function(){
+                   // Update protect channel setting
+                   let channelNo = parseInt($(this).data('channel'));
+                   let bankNo = $('#select-bank').val();
+                   let newValue = $(this).val();
+                   let channel = currentMemoryData.getChannel(bankNo, channelNo);
+                   if (channel) {
+                       channel.writeProtect = newValue;
                    }
                });
 $(document).on('click', '#open-file-btn',
