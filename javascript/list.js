@@ -109,7 +109,21 @@ function setList(memoryBankNo){
                     style: 'border: none; background: transparent;'
                 });
                 title.append(titleInput);
-                mode.append(memoryChannels[i].modeDescription());
+
+                // Create Mode dropdown
+                let modeSelect = $('<select>', {
+                    class: 'mode-select',
+                    'data-channel': i
+                });
+                let modelModes = currentMemoryData.getModelMode();
+                for (let j = 0; j < modelModes.length; j++) {
+                    modeSelect.append($('<option>', {
+                        value: modelModes[j].value,
+                        text: modelModes[j].name
+                    }));
+                }
+                modeSelect.val(memoryChannels[i].getMode());
+                mode.append(modeSelect);
 
                 // Create Pass toggle switch
                 let passSelect = $('<select>', {
@@ -226,7 +240,21 @@ function updateLine(memoryChannelNo){
                 style: 'border: none; background: transparent;'
             });
             $(`#line_title_${memoryChannelNo}`).append(titleInput);
-            $(`#line_mode_${memoryChannelNo}`).text(channel.modeDescription());
+
+            // Recreate Mode dropdown
+            let modeSelect = $('<select>', {
+                class: 'mode-select',
+                'data-channel': memoryChannelNo
+            });
+            let modelModes = currentMemoryData.getModelMode();
+            for (let j = 0; j < modelModes.length; j++) {
+                modeSelect.append($('<option>', {
+                    value: modelModes[j].value,
+                    text: modelModes[j].name
+                }));
+            }
+            modeSelect.val(channel.getMode());
+            $(`#line_mode_${memoryChannelNo}`).empty().append(modeSelect);
 
             // Recreate Pass toggle switch
             let passSelect = $('<select>', {
@@ -726,6 +754,37 @@ $(document).on('input', '.title-input',
                    let channel = currentMemoryData.getChannel(bankNo, channelNo);
                    if (channel) {
                        channel.memoryTag = newTitle;
+                   }
+               });
+$(document).on('change', '.mode-select',
+               function(){
+                   // Update mode setting
+                   let channelNo = parseInt($(this).data('channel'));
+                   let bankNo = $('#select-bank').val();
+                   let modeValue = $(this).val();
+                   let channel = currentMemoryData.getChannel(bankNo, channelNo);
+                   if (channel) {
+                       // Check if it's a digital mode
+                       switch(modeValue) {
+                           case MODE.DSTR.value:
+                           case MODE.YAES.value:
+                           case MODE.ALIN.value:
+                           case MODE.D_CR.value:
+                           case MODE.P_25.value:
+                           case MODE.DPMR.value:
+                           case MODE.DMR.value:
+                           case MODE.T_DM.value:
+                           case MODE.T_TC.value:
+                           case MODE.AUTO.value:
+                               channel.digitalModeEnable = '1';
+                               channel.digitalDecodeMode = modeValue;
+                               channel.analogReceiveMode = MODE.FM.value;
+                               break;
+                           default:
+                               channel.digitalModeEnable = '0';
+                               channel.analogReceiveMode = modeValue;
+                               channel.digitalDecodeMode = '000';
+                       }
                    }
                });
 $(document).on('change', '.pass-toggle',
