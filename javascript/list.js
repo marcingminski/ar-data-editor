@@ -68,6 +68,16 @@ function setList(memoryBankNo){
             $('<th>', {'data-priority': 5 , text: 'Edit' })
         ));
         let memoryChannels = currentMemoryData.getBankChannels(memoryBankNo);
+
+        // Count frequencies to identify duplicates
+        const frequencyCount = new Map();
+        for (let i = 0; i < memoryChannels.length; i++) {
+            if (memoryChannels[i].channelRegistedFlg == '1') {
+                const frequency = memoryChannels[i].receiveFrequency;
+                frequencyCount.set(frequency, (frequencyCount.get(frequency) || 0) + 1);
+            }
+        }
+
         for( let i = 0; i < memoryChannels.length; i++ ){
             let no = $('<td>', { 'class': 'ui-checkbox'}).append(
                 $('<label>',{ 'for': `line_selected_${i}`} ).append(
@@ -103,7 +113,20 @@ function setList(memoryBankNo){
                     class: 'ui-btn ui-icon-edit ui-btn-icon-notext ui-corner-all channel_row',
                     id: `channel_${i}`
                   }));
-            tbody.append($('<tr>', {id: `line_${i}`}).append( no, frequency, title, mode, edit));
+
+            // Check if this is a duplicate frequency
+            let isDuplicate = false;
+            if (memoryChannels[i].channelRegistedFlg == '1') {
+                const freq = memoryChannels[i].receiveFrequency;
+                isDuplicate = frequencyCount.get(freq) > 1;
+            }
+
+            const row = $('<tr>', {id: `line_${i}`});
+            if (isDuplicate) {
+                row.addClass('duplicate-frequency');
+            }
+            row.append(no, frequency, title, mode, edit);
+            tbody.append(row);
         }
         table.addClass('memorychannel-list');
     }else{

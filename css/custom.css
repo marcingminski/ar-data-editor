@@ -178,3 +178,27 @@ p.version{
     border: 1px solid #4a90e2 !important;
     outline: none;
 }
+
+/* Main list duplicate frequency highlighting */
+.memorychannel-list tbody tr.duplicate-frequency td {
+    background-color: #fff3cd;
+}
+.memorychannel-list tbody tr.duplicate-frequency:hover td {
+    background-color: #ffe69c;
+}
+
+/* Set width for No/ID column */
+.memorychannel-list th:first-child,
+.memorychannel-list td:first-child {
+    width: 80px;
+    min-width: 80px;
+    max-width: 80px;
+}
+
+/* Set width for Frequency column */
+.memorychannel-list th:nth-child(2),
+.memorychannel-list td:nth-child(2) {
+    width: 200px;
+    min-width: 200px;
+    max-width: 200px;
+}
