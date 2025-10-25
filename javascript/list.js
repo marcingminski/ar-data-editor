@@ -469,8 +469,18 @@ function readFile(fileElement){
 };
 
 function jsonToCsv(model, filename){
+    console.log('=== jsonToCsv START ===');
+    console.log('Model:', model);
+    console.log('Filename:', filename);
+    console.log('currentMemoryData:', currentMemoryData);
+    console.log('currentMemoryData.fileType:', currentMemoryData ? currentMemoryData.fileType : 'null');
+    console.log('SD_BACKUP constant:', SD_BACKUP);
+
     // Save memory channel file
+    console.log('Converting to CSV...');
     let csv = Papa.unparse( currentMemoryData.toCSVData(model));
+    console.log('CSV length:', csv.length);
+
     let javascriptCharCodeArray = csv.split('').map(
         function(value, index, array){
             return value.charCodeAt(0);
@@ -483,27 +493,45 @@ function jsonToCsv(model, filename){
     a.href = blobURL;
     a.dataset.downloadurl = ['text/csv', a.download, a.href].join(':');
     document.body.appendChild(a);
+    console.log('Triggering main file download:', filename);
     a.click();
     document.body.removeChild(a);
+    console.log('Main file download triggered');
 
     // Also save membk.csv file if this is an SD-BACKUP file
+    // Add a delay to avoid browser blocking multiple downloads
+    console.log('Checking if should save membk.csv...');
+    console.log('Comparison result:', currentMemoryData.fileType === SD_BACKUP);
+
     if (currentMemoryData.fileType === SD_BACKUP) {
-        let membkCsv = Papa.unparse( currentMemoryData.toMemBankCSVData(model));
-        let membkCharCodeArray = membkCsv.split('').map(
-            function(value, index, array){
-                return value.charCodeAt(0);
-            });
-        let membkSJISCodeArray = Encoding.convert(membkCharCodeArray, 'SIJIS', 'UNICODE');
-        let membkBlob = new Blob([new Uint8Array(membkSJISCodeArray)], {'type': 'text/csv'});
-        let membkBlobURL = window.URL.createObjectURL(membkBlob);
-        let membkLink = document.createElement('a');
-        membkLink.download = 'membk.csv';
-        membkLink.href = membkBlobURL;
-        membkLink.dataset.downloadurl = ['text/csv', membkLink.download, membkLink.href].join(':');
-        document.body.appendChild(membkLink);
-        membkLink.click();
-        document.body.removeChild(membkLink);
+        setTimeout(function() {
+            console.log('Starting membk.csv generation (after delay)...');
+            let membkCsv = Papa.unparse( currentMemoryData.toMemBankCSVData(model));
+            console.log('membk CSV generated, length:', membkCsv.length);
+
+            let membkCharCodeArray = membkCsv.split('').map(
+                function(value, index, array){
+                    return value.charCodeAt(0);
+                });
+            let membkSJISCodeArray = Encoding.convert(membkCharCodeArray, 'SIJIS', 'UNICODE');
+            let membkBlob = new Blob([new Uint8Array(membkSJISCodeArray)], {'type': 'text/csv'});
+            let membkBlobURL = window.URL.createObjectURL(membkBlob);
+            let membkLink = document.createElement('a');
+            membkLink.download = 'membk.csv';
+            membkLink.href = membkBlobURL;
+            membkLink.dataset.downloadurl = ['text/csv', membkLink.download, membkLink.href].join(':');
+            document.body.appendChild(membkLink);
+            console.log('Triggering membk.csv download');
+            membkLink.click();
+            document.body.removeChild(membkLink);
+            console.log('membk.csv download triggered');
+        }, 1000); // 1 second delay to avoid browser blocking
+    } else {
+        console.log('NOT saving membk.csv - file type mismatch');
+        console.log('Expected:', SD_BACKUP, 'Got:', currentMemoryData.fileType);
     }
+
+    console.log('=== jsonToCsv END ===');
 }
 function newMemoryData(model, fileType){
     let registeredDate = new Date;
