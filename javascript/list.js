@@ -65,9 +65,10 @@ function setList(memoryBankNo){
             $('<th>', {'data-priority': 2 , text: 'Frequency' }),
             $('<th>', {'data-priority': 3 , text: 'Title' }),
             $('<th>', {'data-priority': 4 , text: 'Mode' }),
-            $('<th>', {'data-priority': 5 , text: 'Pass' }),
-            $('<th>', {'data-priority': 6 , text: 'Protect' }),
-            $('<th>', {'data-priority': 7 , text: 'Edit' })
+            $('<th>', {'data-priority': 5 , text: 'Step' }),
+            $('<th>', {'data-priority': 6 , text: 'Pass' }),
+            $('<th>', {'data-priority': 7 , text: 'Protect' }),
+            $('<th>', {'data-priority': 8 , text: 'Edit' })
         ));
         let memoryChannels = currentMemoryData.getBankChannels(memoryBankNo);
 
@@ -95,6 +96,7 @@ function setList(memoryBankNo){
             let frequency = $('<td>', {id: `line_frequency_${i}`});
             let title = $('<td>', {id: `line_title_${i}`, class: 'editable-title'});
             let mode = $('<td>', {id: `line_mode_${i}`});
+            let step = $('<td>', {id: `line_step_${i}`});
             let pass = $('<td>', {id: `line_pass_${i}`});
             let protect = $('<td>', {id: `line_protect_${i}`});
             if ( memoryChannels[i].channelRegistedFlg == '1' ){
@@ -124,6 +126,13 @@ function setList(memoryBankNo){
                 }
                 modeSelect.val(memoryChannels[i].getMode());
                 mode.append(modeSelect);
+
+                // Display Step/ADJ
+                let stepKey = Object.keys(FREQUENCY_STEP).find(key => FREQUENCY_STEP[key].value == memoryChannels[i].frequencyStep);
+                let stepText = stepKey ? FREQUENCY_STEP[stepKey].text : memoryChannels[i].frequencyStep;
+                let adjKey = stepKey ? FREQUENCY_STEP[stepKey].step_adjust_frequency.find(adj => adj.value == memoryChannels[i].stepAdjustFrequency) : null;
+                let adjText = adjKey ? adjKey.text : memoryChannels[i].stepAdjustFrequency;
+                step.text(stepText + '/' + adjText);
 
                 // Create Pass toggle switch
                 let passSelect = $('<select>', {
@@ -167,7 +176,7 @@ function setList(memoryBankNo){
             if (isDuplicate) {
                 row.addClass('duplicate-frequency');
             }
-            row.append(no, frequency, title, mode, pass, protect, edit);
+            row.append(no, frequency, title, mode, step, pass, protect, edit);
             tbody.append(row);
         }
         table.addClass('memorychannel-list');
@@ -226,6 +235,7 @@ function updateLine(memoryChannelNo){
         $(`#line_frequency_${memoryChannelNo}`).text('');
         $(`#line_title_${memoryChannelNo}`).empty();
         $(`#line_mode_${memoryChannelNo}`).text('');
+        $(`#line_step_${memoryChannelNo}`).text('');
         $(`#line_pass_${memoryChannelNo}`).text('');
         $(`#line_protect_${memoryChannelNo}`).text('');
         if ( channel.channelRegistedFlg == '1' ){
@@ -255,6 +265,13 @@ function updateLine(memoryChannelNo){
             }
             modeSelect.val(channel.getMode());
             $(`#line_mode_${memoryChannelNo}`).empty().append(modeSelect);
+
+            // Display Step/ADJ
+            let stepKey = Object.keys(FREQUENCY_STEP).find(key => FREQUENCY_STEP[key].value == channel.frequencyStep);
+            let stepText = stepKey ? FREQUENCY_STEP[stepKey].text : channel.frequencyStep;
+            let adjKey = stepKey ? FREQUENCY_STEP[stepKey].step_adjust_frequency.find(adj => adj.value == channel.stepAdjustFrequency) : null;
+            let adjText = adjKey ? adjKey.text : channel.stepAdjustFrequency;
+            $(`#line_step_${memoryChannelNo}`).text(stepText + '/' + adjText);
 
             // Recreate Pass toggle switch
             let passSelect = $('<select>', {

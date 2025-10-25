@@ -213,7 +213,7 @@ p.version{
     max-width: 200px;
 }
 
-/* Set width for Pass column */
+/* Set width for Step column */
 .memorychannel-list th:nth-child(5),
 .memorychannel-list td:nth-child(5) {
     width: 150px;
@@ -221,10 +221,23 @@ p.version{
     max-width: 150px;
     text-align: center;
 }
+.memorychannel-list td:nth-child(5) {
+    font-family: monospace;
+    font-size: 1.2em;
+}
 
-/* Set width for Protect column */
+/* Set width for Pass column */
 .memorychannel-list th:nth-child(6),
 .memorychannel-list td:nth-child(6) {
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
+    text-align: center;
+}
+
+/* Set width for Protect column */
+.memorychannel-list th:nth-child(7),
+.memorychannel-list td:nth-child(7) {
     width: 150px;
     min-width: 150px;
     max-width: 150px;
