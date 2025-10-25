@@ -94,7 +94,7 @@ function setList(memoryBankNo){
             let title = $('<td>', {id: `line_title_${i}`, class: 'editable-title'});
             let mode = $('<td>', {id: `line_mode_${i}`});
             if ( memoryChannels[i].channelRegistedFlg == '1' ){
-                frequency.append(memoryChannels[i].receiveFrequency);
+                frequency.append($('<span>').text(memoryChannels[i].receiveFrequency)).append(' MHz');
                 // Create editable input for title
                 let titleInput = $('<input>', {
                     type: 'text',
@@ -102,7 +102,7 @@ function setList(memoryBankNo){
                     'data-channel': i,
                     value: memoryChannels[i].memoryTag,
                     maxlength: 12,
-                    style: 'width: 100%; border: none; background: transparent; font-family: inherit;'
+                    style: 'border: none; background: transparent;'
                 });
                 title.append(titleInput);
                 mode.append(memoryChannels[i].modeDescription());
@@ -158,7 +158,7 @@ function setList(memoryBankNo){
                     'data-channel': i,
                     value: memoryChannels[i].memoryTag,
                     maxlength: 12,
-                    style: 'width: 100%; border: none; background: transparent; font-family: inherit;'
+                    style: 'border: none; background: transparent;'
                 });
                 title.append(titleInput);
                 mode.append(memoryChannels[i].modeDescription());
@@ -185,7 +185,7 @@ function updateLine(memoryChannelNo){
         $(`#line_title_${memoryChannelNo}`).empty();
         $(`#line_mode_${memoryChannelNo}`).text('');
         if ( channel.channelRegistedFlg == '1' ){
-            $(`#line_frequency_${memoryChannelNo}`).text(channel.receiveFrequency);
+            $(`#line_frequency_${memoryChannelNo}`).empty().append($('<span>').text(channel.receiveFrequency)).append(' MHz');
             // Recreate editable input for title
             let titleInput = $('<input>', {
                 type: 'text',

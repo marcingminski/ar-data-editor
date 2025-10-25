@@ -124,6 +124,10 @@
 }
 .memorychannel-list td{
     height: 1.5em;
+    vertical-align: middle !important;
+}
+.memorychannel-list th {
+    vertical-align: middle !important;
 }
 .template-list td{
     height: 1.5em;
@@ -167,16 +171,37 @@ p.version{
 /* Inline title editing */
 .title-input {
     padding: 2px 4px;
-    font-size: inherit;
+    font-size: 1.2em;
+    font-family: monospace;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
 }
 .title-input:hover {
     background: #f0f0f0 !important;
     cursor: text;
+    border: none !important;
 }
 .title-input:focus {
     background: #fff !important;
     border: 1px solid #4a90e2 !important;
-    outline: none;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Set width for Title column */
+.memorychannel-list th:nth-child(3),
+.memorychannel-list td:nth-child(3) {
+    width: 180px;
+    min-width: 180px;
+    max-width: 180px;
+    padding: 0 !important;
+}
+.memorychannel-list td:nth-child(3).editable-title {
+    padding: 2px !important;
 }
 
 /* Main list duplicate frequency highlighting */
@@ -201,4 +226,8 @@ p.version{
     width: 200px;
     min-width: 200px;
     max-width: 200px;
+}
+.memorychannel-list td:nth-child(2) {
+    font-family: monospace;
+    font-size: 1.2em;
 }
