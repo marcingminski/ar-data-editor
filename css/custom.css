@@ -137,6 +137,10 @@ p.version{
 }
 
 /* Import channels dialog styles */
+#import_channels-popup {
+    top: 10% !important;
+    margin-top: 0 !important;
+}
 #import-channel-list {
     border-collapse: collapse;
     font-size: 0.9em;
