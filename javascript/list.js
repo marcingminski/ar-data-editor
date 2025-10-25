@@ -22,9 +22,14 @@ function setSelectMemoryBank(){
     if ( currentMemoryData.fileType == SD_BACKUP ){
         $('#select-bank').empty();
         for( let i = 0; i < currentMemoryData.getBanks(); i++ ){
+            let bankName = currentMemoryData.getBankName(i);
+            let displayText = paddingZero(i);
+            if (bankName && bankName.trim() !== '') {
+                displayText += ' - ' + bankName;
+            }
             $('#select-bank').append(
                 $('<option>', { value: i,
-                                text: paddingZero(i) })
+                                text: displayText })
             );
         }
         $('#select-bank').val(0).selectmenu('refresh');
@@ -555,9 +560,17 @@ $(document).on('input', '#bank-name-input',
                function(){
                    // Save bank name as user types
                    if (currentMemoryData && currentMemoryData.fileType == SD_BACKUP) {
-                       let bankNo = $('#select-bank').val();
+                       let bankNo = parseInt($('#select-bank').val());
                        let bankName = $(this).val();
                        currentMemoryData.setBankName(bankNo, bankName);
+
+                       // Update the dropdown option text to reflect the new name
+                       let displayText = paddingZero(bankNo);
+                       if (bankName && bankName.trim() !== '') {
+                           displayText += ' - ' + bankName;
+                       }
+                       $(`#select-bank option[value="${bankNo}"]`).text(displayText);
+                       $('#select-bank').selectmenu('refresh');
                    }
 });
 $(document).on('click', '#import-bank-names-btn',
@@ -590,6 +603,17 @@ $(document).on('change', '#membk-file-select',
                                    // Apply bank names to current memory data
                                    if (currentMemoryData && currentMemoryData.fileType == SD_BACKUP) {
                                        currentMemoryData._bankNames = bankNames;
+
+                                       // Update all dropdown options with new bank names
+                                       for (let i = 0; i < MEMORY_BANK_NUM; i++) {
+                                           let bankName = currentMemoryData.getBankName(i);
+                                           let displayText = paddingZero(i);
+                                           if (bankName && bankName.trim() !== '') {
+                                               displayText += ' - ' + bankName;
+                                           }
+                                           $(`#select-bank option[value="${i}"]`).text(displayText);
+                                       }
+                                       $('#select-bank').selectmenu('refresh');
 
                                        // Update current bank name display
                                        let currentBankNo = $('#select-bank').val();
